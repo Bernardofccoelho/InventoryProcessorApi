@@ -1,0 +1,69 @@
+services:
+  api:
+    image: devtools
+    container_name: inventory-processor-api
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    command: sh -c "php artisan serve --host=0.0.0.0 --port=5000"
+    environment:
+      REDIS_HOST: redis
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - inventory-processor-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: inventory-processor-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - inventory-processor-network
+
+  wiremock:
+    image: wiremock/wiremock:3.13.2
+    container_name: inventory-wiremock
+    ports:
+      - "8880:8080"
+    volumes:
+      - "./wiremock:/home/wiremock:ro"
+    command:
+      - "--port"
+      - "8080"
+      - "--local-response-templating"
+    networks:
+      - inventory-processor-network
+
+  devtools:
+    image: devtools
+    container_name: inventory-processor-devtools
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      REDIS_HOST: redis
+    stdin_open: true
+    tty: true
+    networks:
+      - inventory-processor-network
+
+networks:
+  inventory-processor-network:
+    driver: bridge
+
+volumes:
+  redis-data:
