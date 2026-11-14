@@ -6,6 +6,7 @@ services:
     working_dir: /app
     volumes:
       - .:/app
+      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     ports:
       - "5000:5000"
     command: sh -c "php artisan serve --host=0.0.0.0 --port=5000"
@@ -27,7 +28,7 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5

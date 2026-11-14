@@ -30,22 +30,12 @@ final class Controller
         $service = new Service($inventoryEvent);
 
         try {
-            $service->acquireLock();
-
-            if (! $service->eventIsValid()) {
+            if (! $service->process()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Request ignored',
                 ], 409);
             }
-
-            $service->fetchProductContext();
-
-            $service->updateProductAvailability();
-
-            $service->outputEvent();
-
-            $service->updateProductSouceVersion();
         } catch (LockTimeoutException) {
             Log::error('Unable to aquire lock', [
                 'eventId' => $inventoryEvent->eventId,
@@ -65,8 +55,6 @@ final class Controller
                 'success' => false,
                 'message' => 'Error processing inventory event',
             ], 500);
-        } finally {
-            $service->releaseLock();
         }
 
         return response()->json([
