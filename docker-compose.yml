@@ -1,6 +1,8 @@
 services:
   api:
-    image: devtools
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: inventory-processor-api
     restart: unless-stopped
     working_dir: /app
@@ -39,26 +41,13 @@ services:
     image: wiremock/wiremock:3.13.2
     container_name: inventory-wiremock
     ports:
-      - "8880:8080"
+      - "8080:8080"
     volumes:
       - "./wiremock:/home/wiremock:ro"
     command:
       - "--port"
       - "8080"
       - "--local-response-templating"
-    networks:
-      - inventory-processor-network
-
-  devtools:
-    image: devtools
-    container_name: inventory-processor-devtools
-    working_dir: /app
-    volumes:
-      - .:/app
-    environment:
-      REDIS_HOST: redis
-    stdin_open: true
-    tty: true
     networks:
       - inventory-processor-network
 
